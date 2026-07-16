@@ -1,0 +1,26 @@
+{
+  "domain": "claude",
+  "name": "Claude",
+  "after_dependencies": [
+    "assist_pipeline",
+    "intent"
+  ],
+  "codeowners": [
+    "@domenix"
+  ],
+  "config_flow": true,
+  "dependencies": [
+    "conversation"
+  ],
+  "documentation": "https://github.com/domenix/claude-conversation-agent",
+  "integration_type": "service",
+  "iot_class": "cloud_polling",
+  "issue_tracker": "https://github.com/domenix/claude-conversation-agent/issues",
+  "loggers": [
+    "claude_agent_sdk"
+  ],
+  "requirements": [
+    "claude-agent-sdk==0.2.119"
+  ],
+  "version": "1.0.0"
+}

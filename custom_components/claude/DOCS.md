@@ -1,0 +1,107 @@
+# Claude
+
+Run Home Assistant's conversation agent and AI Tasks on your **Claude
+subscription** instead of a pay-per-token Anthropic API key. The integration
+drives the Claude Agent SDK **in-process** (the SDK bundles the Claude Code CLI,
+`claude -p`) and mirrors the stock Anthropic integration feature-for-feature.
+
+## How it works
+
+```
+Assist / AI Task
+      │  (conversation entity, streaming)
+claude integration        ── in-process, inside Home Assistant
+      │  Claude Agent SDK (query) ── bundled claude CLI subprocess
+      │  in-process MCP server "ha"  ← HA LLM tools, executed directly
+your Claude subscription
+```
+
+- Home Assistant builds the prompt and exposes the selected LLM API tools (e.g.
+  Assist) to the model as an in-process MCP server (`mcp__ha__*`).
+- The agent loop runs inside Home Assistant. When Claude calls an HA tool, the
+  integration executes it **directly** via the conversation's LLM API — no
+  round-trip, respecting your exposed entities exactly like the stock
+  integration. Tool calls and results are still recorded in the chat log.
+- Conversations map to Claude sessions (`resume`), so multi-turn context is
+  kept across turns; after a Home Assistant restart the prior transcript is
+  folded into the system prompt instead.
+
+## Setup
+
+**Settings → Devices & services → Add integration → Claude.** The first time
+you submit credentials the integration downloads the Claude Code CLI matching
+your platform (~250 MB, cached under `/config`), so allow a few minutes. Then
+pick one of:
+
+### Log in with Claude (recommended)
+
+Open the link the flow shows, approve access, and paste the code back. Home
+Assistant notifies you before the login expires, and again if it does.
+
+### Enter a token or API key manually
+
+- **OAuth token** — from `claude setup-token` (the `sk-ant-oat01-...` value).
+- **API key** — an Anthropic API key, used only when no OAuth token is set.
+
+Credentials are verified with a minimal query before the entry is created. Change
+them later via the integration's **Reconfigure**.
+
+The integration creates a conversation agent (with Assist control enabled) and
+an AI Task entity. Add more, or reconfigure options (model, thinking, web search,
+web fetch, code execution), from the integration's subentries.
+
+## Options (per subentry)
+
+| Option | Description |
+|---|---|
+| Model | Model for responses. "Account default" uses your Claude default. |
+| Maximum tokens | Cap on response tokens per turn. |
+| Thinking budget | Extended-thinking token budget (0 = model decides). |
+| Thinking effort | Effort level (default/low/medium/high/xhigh/max). |
+| Code execution | Allow Bash / file tools in a scratch workspace inside HA. |
+| Web search / Web fetch | Enable Claude's WebSearch / WebFetch tools. |
+| Include home location | Localize web search to your home location. |
+
+Credentials (OAuth token / API key) live on the integration entry itself and are
+changed via **Reconfigure** or the reauth prompt.
+
+## Feature mapping vs. the Anthropic integration
+
+| Anthropic integration | Claude |
+|---|---|
+| API key | Claude subscription (OAuth token) or API key |
+| Model selection | Same (aliases + custom value) |
+| Assist / LLM API tools | Same (executed in-process) |
+| Streaming responses | Same |
+| Extended thinking budget / effort | Same (`thinking`, `effort`) |
+| Web search / web fetch | Claude WebSearch / WebFetch tools |
+| Code execution | Claude Bash/file tools, in a scratch workspace |
+| Attachments (images, PDF) | Same |
+| AI Task structured output | Native JSON-schema output |
+| Prompt caching strategy | Managed automatically by Claude |
+| Per-tool max uses | Not available (bounded by max turns instead) |
+
+## Known limitations
+
+- Latency is higher than the raw API: each turn spins the Claude agent
+  loop. Expect a few seconds; noticeable on voice.
+- Headless runs consume the Agent SDK credit pool of your subscription; when
+  exhausted, requests fail until it resets (or configure an API key).
+- The CLI is fetched for your platform (`linux-arm64`/`linux-x64`, glibc or
+  musl) from Anthropic's release server on first setup; it needs outbound
+  internet and ~250 MB free under `/config`.
+- Code execution runs inside the Home Assistant process, as root; leave it off
+  unless you trust the exposed conversation.
+- Citations are not surfaced.
+
+## Troubleshooting
+
+- **"Claude has no valid credentials"** / **"401 Invalid authentication
+  credentials"** — the login expired or was revoked. Reconfigure the integration
+  and log in again.
+- **Setup hangs on first install** — the `claude-agent-sdk` wheel is large; give
+  it time, and check Home Assistant has outbound internet for pip.
+- **Model errors** — leave the model on "Account default" or pick one your
+  subscription can access.
+- Set the `claude` logger to `debug` to see the full event flow and the
+  CLI's stderr.

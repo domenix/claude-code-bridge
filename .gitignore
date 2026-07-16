@@ -1,0 +1,7 @@
+__pycache__/
+*.pyc
+node_modules/
+.smoketest/
+.venv/
+.pytest_cache/
+.ruff_cache/

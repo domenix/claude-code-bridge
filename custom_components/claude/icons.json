@@ -1,0 +1,14 @@
+{
+  "entity": {
+    "ai_task": {
+      "ai_task_data": {
+        "default": "mdi:star-four-points"
+      }
+    },
+    "conversation": {
+      "conversation": {
+        "default": "mdi:chat"
+      }
+    }
+  }
+}
