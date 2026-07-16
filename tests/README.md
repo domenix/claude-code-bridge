@@ -4,10 +4,15 @@ Smoke tests for the integration. The Claude Agent SDK is patched out, so no CLI,
 network or credentials are required.
 
 ```sh
-uv venv .venv
+uv venv --python 3.14 .venv
 uv pip install --python .venv pytest-homeassistant-custom-component claude-agent-sdk
 .venv/bin/python -m pytest tests -q
 ```
+
+Pin the interpreter to the one current Home Assistant requires. On an older
+Python, the resolver silently walks back to an ancient
+`pytest-homeassistant-custom-component` — and its Home Assistant pin with it —
+so the tests quietly run against a version you don't ship on.
 
 Home Assistant pulls extra requirements for the platforms under test
 (`conversation` needs `hassil` and `home-assistant-intents`, `ai_task` needs
