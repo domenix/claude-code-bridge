@@ -45,7 +45,7 @@ DEFAULT = {
     CONF_WEB_FETCH: False,
     CONF_WEB_SEARCH: False,
     CONF_WEB_SEARCH_USER_LOCATION: False,
-    CONF_RUN_TIMEOUT: 90,
+    CONF_RUN_TIMEOUT: 290,
     CONF_SHOW_ACTIVITY: False,
 }
 
@@ -67,8 +67,12 @@ ALWAYS_DISALLOWED = ["TodoWrite", "KillShell", "BashOutput"]
 # A run with no timeout can hang forever if an upstream stream stalls; the
 # conversation framework would otherwise block a long time. Bound each run and
 # each in-process HA tool call so a stall fails fast.
-DEFAULT_RUN_TIMEOUT_S = 90
-DEFAULT_TOOL_TIMEOUT_S = 45
+#
+# Assist wraps a run in its own 300 s pipeline timeout, which cancels the run
+# and reports a generic error. Staying just under it means our own, specific
+# error wins the race and says what actually timed out.
+DEFAULT_RUN_TIMEOUT_S = 290
+DEFAULT_TOOL_TIMEOUT_S = 180
 
 # Directories, relative to the HA config dir, used by the bundled Claude
 # CLI: HOME holds its credentials/cache, WORKSPACE is the agent's cwd.
